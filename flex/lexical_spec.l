@@ -24,7 +24,8 @@ using namespace std;
 #define ASSIGN_CLASS "assign"
 #define COMMA_CLASS ","
 #define ID_CLASS "id"
-#define NUM_CLASS "num"
+#define INT_NUM_CLASS "int_num"
+#define FLOAT_NUM_CLASS "float_num"
 
 #define YY_DECL extern "C" int yylex()
 
@@ -33,11 +34,15 @@ extern "C++" std::ofstream log_file;
 int line_num = 1;
 
 %} 
-digit	[0-9]
-digits 	({digit}+)
-letter	[a-zA-Z]
-id   	({letter}({letter}|{digit})*)
-num	({digits}|{digits}"."({digits}|{digits}"E"{digits}))
+digit		[0-9]
+digits 		{digit}+
+letter		[a-zA-Z]
+id   		{letter}({letter}|{digit})*
+sign        [+-]
+int_num		{digits}
+float_num   (({digit}*\.{digit}+)|({digit}+\.{digit}*)){exp}?
+exp         [eE]{sign}?{digit}+
+
 %%
 [ \t]		;
 boolean {
@@ -142,13 +147,21 @@ while   {
  	   		token_file << ID_CLASS << endl;
 			return TOK_ID;
 		}
-{num}	{
+{int_num}	{
 			log_file << std::left << std::setw(20) << "[MATCHED]" <<
-                std::left << std::setw(40) << yytext << std::setw (30) << NUM_CLASS << endl;
-		 	token_file << NUM_CLASS << endl;
-			return TOK_NUM;
+                std::left << std::setw(40) << yytext << std::setw (30) << INT_NUM_CLASS << endl;
+		 	token_file << INT_NUM_CLASS << endl;
+			yylval.ival = atoi(yytext);
+			return INT;
 		}
-\n		{
+{float_num}	{
+			log_file << std::left << std::setw(20) << "[MATCHED]" <<
+                std::left << std::setw(40) << yytext << std::setw (30) << FLOAT_NUM_CLASS << endl;
+		 	token_file << FLOAT_NUM_CLASS << endl;
+			yylval.fval = atof(yytext);
+			return FLOAT;
+		}
+[\n]	{
 			line_num++;	
 		}
 . 		{ 

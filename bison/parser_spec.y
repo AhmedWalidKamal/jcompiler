@@ -25,18 +25,16 @@ std::ofstream log_file;
 // holding each of the types of tokens that Flex could return, and have Bison
 // use that union instead of "int" for the definition of "yystype"
 %union {
-	int int_val;
-	float float_val;
-    bool bool_val;
-	char *string_val;
+	int ival;
+	float fval;
+    bool bval;
+	char *sval;
 }
 
 // Define the "terminal symbol" token types I'm going to use (in CAPS
 // by convention), and associate each with a field of the union:
 %token <ival> INT
 %token <fval> FLOAT
-%token <bool_val>
-%token <sval> STRING
 %token TOK_INT
 %token TOK_FLOAT
 %token TOK_BOOLEAN
@@ -48,8 +46,11 @@ std::ofstream log_file;
 %token TOK_RELOP
 %token TOK_ADDOP
 %token TOK_MULOP
-%token TOK_NUM
 %token UNRECOGNIZED_TOKEN
+
+// Precedence is downwards
+%left '+' '-'
+%left '*' '/'
 
 %%
 // Grammar
@@ -64,7 +65,7 @@ assignment: TOK_ID TOK_ASSIGN expression ';';
 expression: simple_expression | simple_expression TOK_RELOP simple_expression;
 simple_expression: term | sign term | simple_expression TOK_ADDOP term;
 term: factor | term TOK_MULOP factor;
-factor: TOK_ID | TOK_NUM | '(' expression ')';
+factor: TOK_ID | INT | FLOAT | '(' expression ')';
 sign: TOK_ADDOP;
 %%
 
@@ -105,5 +106,5 @@ int main(int argc, char **argv) {
 
 void yyerror(const char *s) {
 	cout << "EEK, parse error on line " << line_num << "!  Message: " << s << endl;
-	// exit(-1); // Remove this to allow panic error recovery to keep execution
+	exit(-1); // Remove this to allow panic error recovery to keep execution
 }

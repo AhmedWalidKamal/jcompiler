@@ -1,3 +1,11 @@
+# Output files
+compiler.log
+token-file.txt
+lex.yy.c
+parser
+parser_spec.tab.c
+parser_spec.tab.h
+
 # Prerequisites
 *.d
 
