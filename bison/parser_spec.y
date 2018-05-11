@@ -113,9 +113,9 @@ assignment: TOK_ID TOK_ASSIGN expression ';'
   				if (symbol_table.find(id_name) != symbol_table.end()) {
                    if (symbol_table[id_name].first == $3) {
                      if ($3 == type::I_TYPE) {
-                       bytecode_file << "istore " << symbol_table[id_name].second;
+                       bytecode_file << "istore " << symbol_table[id_name].second << endl;
                      } else if ($3 == type::F_TYPE) {
-                       bytecode_file << "fstore " << symbol_table[id_name].second;
+                       bytecode_file << "fstore " << symbol_table[id_name].second << endl;
                      }
                    } else {
                      string err_msg = "Type mismatch!";
