@@ -85,6 +85,7 @@ while   {
 								log_file << std::left << std::setw(20) << "[MATCHED]" <<
                 					std::left << std::setw(40) << yytext << std::setw (30) << RELOP_CLASS << endl;
 							 	token_file << RELOP_CLASS << endl;
+								yylval.oper_name = strdup(yytext);
 							 	return TOK_RELOP;
 							}
 "("     {
@@ -121,12 +122,14 @@ while   {
 	   		log_file << std::left << std::setw(20) << "[MATCHED]" <<
                 std::left << std::setw(40) << yytext << std::setw (30) << ADDOP_CLASS << endl;
 		 	token_file << ADDOP_CLASS << endl;
+			yylval.oper_name = strdup(yytext);
 			return TOK_ADDOP;
 		}
 "*"|"/" {
 			log_file << std::left << std::setw(20) << "[MATCHED]" <<
                 std::left << std::setw(40) << yytext << std::setw (30) << MULOP_CLASS << endl;
          	token_file << MULOP_CLASS << endl;
+			yylval.oper_name = strdup(yytext);
 			return TOK_MULOP;
 		}
 "=" 	{
@@ -145,20 +148,21 @@ while   {
 			log_file << std::left << std::setw(20) << "[MATCHED]" <<
                 std::left << std::setw(40) << yytext << std::setw (30) << ID_CLASS << endl;
  	   		token_file << ID_CLASS << endl;
+			yylval.id_name = strdup(yytext);
 			return TOK_ID;
 		}
 {int_num}	{
 			log_file << std::left << std::setw(20) << "[MATCHED]" <<
                 std::left << std::setw(40) << yytext << std::setw (30) << INT_NUM_CLASS << endl;
 		 	token_file << INT_NUM_CLASS << endl;
-			yylval.ival = atoi(yytext);
+			yylval.int_literal = strdup(yytext);
 			return INT;
 		}
 {float_num}	{
 			log_file << std::left << std::setw(20) << "[MATCHED]" <<
                 std::left << std::setw(40) << yytext << std::setw (30) << FLOAT_NUM_CLASS << endl;
 		 	token_file << FLOAT_NUM_CLASS << endl;
-			yylval.fval = atof(yytext);
+			yylval.float_literal = strdup(yytext);
 			return FLOAT;
 		}
 [\n]	{

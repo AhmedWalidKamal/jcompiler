@@ -1,3 +1,6 @@
+.vscode/
+
+
 # Output files
 compiler.log
 token-file.txt
