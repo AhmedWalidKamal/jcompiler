@@ -30,6 +30,7 @@ using namespace std;
 
 extern "C++" std::ofstream token_file;
 extern "C++" std::ofstream log_file;
+int line_num = 1;
 
 %} 
 digit	[0-9]
@@ -38,7 +39,7 @@ letter	[a-zA-Z]
 id   	({letter}({letter}|{digit})*)
 num	({digits}|{digits}"."({digits}|{digits}"E"{digits}))
 %%
-[ \t\n]		;
+[ \t]		;
 boolean {
             log_file << std::left << std::setw(20) << "[MATCHED]" <<
             	std::left << std::setw(40) << yytext << std::setw (30) << BOOLEAN_CLASS << endl;
@@ -146,6 +147,9 @@ while   {
                 std::left << std::setw(40) << yytext << std::setw (30) << NUM_CLASS << endl;
 		 	token_file << NUM_CLASS << endl;
 			return TOK_NUM;
+		}
+\n		{
+			line_num++;	
 		}
 . 		{ 
 			log_file << std::left << std::setw(20) << "[UNMATCHED]" <<

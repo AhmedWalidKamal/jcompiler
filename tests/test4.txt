@@ -1,0 +1,8 @@
+int  count ;
+while (pass != 10)  {
+    pass = pass + 1;
+
+    while (mnt != 0) {
+        count = count + 1.234;
+    }
+}

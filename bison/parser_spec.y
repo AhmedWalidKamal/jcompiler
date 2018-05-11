@@ -9,6 +9,7 @@ using namespace std;
 extern "C" int yylex();
 extern "C" int yyparse();
 extern "C" FILE *yyin;
+extern int line_num;
 
 // Function to handle parsing errors
 void yyerror(const char *s);
@@ -102,6 +103,6 @@ int main(int argc, char **argv) {
 }
 
 void yyerror(const char *s) {
-	cout << "EEK, parse error!  Message: " << s << endl;
+	cout << "EEK, parse error on line " << line_num << "!  Message: " << s << endl;
 	exit(-1); // Remove this to allow panic error recovery to keep execution
 }
