@@ -1,0 +1,8 @@
+int sum;
+int count; 
+boolean pass;
+float mnt;
+while (pass != 10)
+{
+pass = pass + 1;
+}
