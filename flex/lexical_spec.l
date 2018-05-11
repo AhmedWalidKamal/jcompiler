@@ -154,6 +154,7 @@ while   {
 . 		{ 
 			log_file << std::left << std::setw(20) << "[UNMATCHED]" <<
                 std::left << std::setw(40) << yytext << std::setw (30) << "" << endl;
+			return UNRECOGNIZED_TOKEN;
 		}
 
 %%

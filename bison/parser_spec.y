@@ -49,6 +49,7 @@ std::ofstream log_file;
 %token TOK_ADDOP
 %token TOK_MULOP
 %token TOK_NUM
+%token UNRECOGNIZED_TOKEN
 
 %%
 // Grammar
@@ -104,5 +105,5 @@ int main(int argc, char **argv) {
 
 void yyerror(const char *s) {
 	cout << "EEK, parse error on line " << line_num << "!  Message: " << s << endl;
-	exit(-1); // Remove this to allow panic error recovery to keep execution
+	// exit(-1); // Remove this to allow panic error recovery to keep execution
 }
