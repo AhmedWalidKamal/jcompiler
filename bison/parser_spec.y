@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <stack>
 #include <vector>
 #include "bison/instr_set.h"
 using namespace std;
@@ -25,6 +26,8 @@ typedef enum {I_TYPE, F_TYPE, B_TYPE} type;
 map<string, pair<type, int>> symbol_table;
 map<string, int> constant_table;
 vector<pair<string, int>> code_vec;
+stack<int> while_addresses;
+
 // Function to handle parsing errors
 void yyerror(const char *s);
 
@@ -139,7 +142,26 @@ if: TOK_IF '(' boolean_expression ')' '{' statement '}' TOK_ELSE
                     }
                     '}';
 
-while: TOK_WHILE '(' boolean_expression ')' '{' statement '}';
+while: TOK_WHILE '(' 
+                    {
+                        // Need to use current program counter to "goto" at the end of the while clause.
+                        while_addresses.push(program_counter);
+                    }
+                boolean_expression ')' '{' 
+                statement
+                    {
+                        int target_pc = while_addresses.top();
+                        while_addresses.pop();
+                        code_vec.push_back(make_pair("goto\t" + to_string(target_pc), 3));
+                        program_counter += 3;
+                        for (int i = code_vec.size() - 1; i >= 0; i--) {
+                            if (is_conditional_branch_instr(code_vec[i].first)) {
+                                code_vec[i].first.append("\t" + to_string(program_counter));
+                                break;
+                            }
+                        }
+                    } 
+                    '}';
 
 assignment: TOK_ID TOK_ASSIGN expression ';'
             {

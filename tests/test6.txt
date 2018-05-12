@@ -1,0 +1,11 @@
+int x;
+int y;
+if (x < y) {
+    if (y >= x) {
+        x = 1000;
+    } else {
+        y = x;
+    }
+} else {
+    y = 5;
+}
