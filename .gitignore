@@ -2,6 +2,7 @@
 
 # Output files
 compiler.log
+bytecode.j
 token-file.txt
 lex.yy.c
 parser
