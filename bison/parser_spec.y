@@ -19,7 +19,7 @@ std::ofstream log_file;
 std::ofstream bytecode_file;
 
 int vars_cnt = 1;
-int constants_cnt = 1;
+int constants_cnt = 2;
 int program_counter = 0;
 typedef enum {I_TYPE, F_TYPE, B_TYPE} type;
 map<string, pair<type, int>> symbol_table;
@@ -32,6 +32,7 @@ void yyerror(const char *s);
 void add_to_symb_table(string sym_name, type sym_type);
 void add_to_const_table(string const_name);
 bool same_type(int type_1, int type_2);
+bool is_conditional_branch_instr(string instuction);
 void print_code();
 %}
 
@@ -89,8 +90,14 @@ declaration: primitive_type TOK_ID ';'
         // Declaring a variable named "TOK_ID" with type primitive_type.
   		string name($2);
         add_to_symb_table(name, (type)$1);
-        code_vec.push_back(make_pair("ldc\t#" + to_string(constant_table["0"]), 2));
-        code_vec.push_back(make_pair("istore\t" + to_string(symbol_table[name].second), 2));
+        code_vec.push_back(make_pair("ldc\t#" + to_string(constant_table["0"]) + "\t\t // Loads '0' onto the top of the stack", 2));
+        program_counter += 2;
+        if ($1 == type::I_TYPE) {
+            code_vec.push_back(make_pair("istore\t" + to_string(symbol_table[name].second), 2));
+        } else {
+            code_vec.push_back(make_pair("fstore\t" + to_string(symbol_table[name].second), 2));
+        }
+        program_counter += 2;
     };
 
 primitive_type: TOK_INT
@@ -106,12 +113,31 @@ primitive_type: TOK_INT
 					$$ = type::B_TYPE;
                 };
 
-if: TOK_IF '(' boolean_expression
-                {
-                    // Here I've just wrote the relop bytecode
-                    
-                } 
-                ')' '{' statement '}' TOK_ELSE '{' statement '}';
+if: TOK_IF '(' boolean_expression ')' '{' statement '}' TOK_ELSE 
+                '{'
+                    {
+                        // Here we begin the first statement in the else clause, write goto after if/else clause.
+                        code_vec.push_back(make_pair("goto", 3));
+                        program_counter += 3;
+                        // Search for first if bytecode not yet initialized with an operand, and add to it current PC
+                        for (int i = code_vec.size() - 1; i >= 0; i--) {
+                            if (is_conditional_branch_instr(code_vec[i].first)) {
+                                code_vec[i].first.append("\t" + to_string(program_counter));
+                                break;
+                            }
+                        }
+                    } 
+                    statement 
+                    {
+                        // After last statement in the else clause is executed, search for last goto without an operand, add to it current PC.
+                        for (int i = code_vec.size() - 1; i >= 0; i--) {
+                            if (code_vec[i].first == "goto") {
+                                code_vec[i].first.append("\t" + to_string(program_counter));
+                                break;
+                            }
+                        }
+                    }
+                    '}';
 
 while: TOK_WHILE '(' boolean_expression ')' '{' statement '}';
 
@@ -126,6 +152,7 @@ assignment: TOK_ID TOK_ASSIGN expression ';'
                         } else if ($3 == type::F_TYPE) {
                             code_vec.push_back(make_pair("fstore\t" + to_string(symbol_table[id_name].second), 2));
                         }
+                        program_counter += 2;
                     } else {
                         string err_msg = "Type mismatch!";
                         yyerror(err_msg.c_str());
@@ -143,10 +170,10 @@ expression: simple_expression
 
 boolean_expression: simple_expression TOK_RELOP simple_expression
                     {
-            	        $$ = type::B_TYPE;
                         // TODO: write bytecode for relops
                         // Here top 2 of the stack are the 2 values to operate on
-                
+                        code_vec.push_back(make_pair(instr_list[string($2)], 3));
+                        program_counter += 3;
                     };
 
 
@@ -165,6 +192,7 @@ simple_expression: term
                             	$$ = type::I_TYPE;
                                 code_vec.push_back(make_pair("i" + instr_list[string($2)], 1));
                             }
+                            program_counter++;
                         } else {
                         	string err_msg = "Arithmetic operation on two operands with different types!";
                   			yyerror(err_msg.c_str());
@@ -185,6 +213,7 @@ term: factor
                     $$ = type::I_TYPE;
                     code_vec.push_back(make_pair("i" + instr_list[string($2)], 1));
                 }
+                program_counter++;
             } else {
             	string err_msg = "Multiplication operation on two operands with different types!";
                 yyerror(err_msg.c_str());
@@ -202,6 +231,7 @@ factor: TOK_ID
                 } else if (symbol_table[id_name].first == type::F_TYPE) {
                     code_vec.push_back(make_pair("fload\t" + to_string(symbol_table[id_name].second), 2));
                 }
+                program_counter += 2;
             } else {
                 string err_msg = "Variable: " + id_name + " has not been declared!";
                 yyerror(err_msg.c_str());
@@ -215,6 +245,7 @@ factor: TOK_ID
             	add_to_const_table(const_str);
             }
             code_vec.push_back(make_pair("ldc\t#" + to_string(constant_table[const_str]), 2));
+            program_counter += 2;
         }
         | FLOAT 
         {
@@ -224,6 +255,7 @@ factor: TOK_ID
             	add_to_const_table(const_str);
             }
             code_vec.push_back(make_pair("ldc\t#" + to_string(constant_table[const_str]), 2));
+            program_counter += 2;
         }
         | '(' expression ')' 
         {
@@ -301,7 +333,7 @@ void print_code() {
 
     bytecode_file << "public Main();\n\tCode:\n";
     bytecode_file << "\t\t0: aload_0\n";
-    bytecode_file << "\t\t1: invokespecial #1                  // Method java/lang/Object.\"<init>\":()V";
+    bytecode_file << "\t\t1: invokespecial #1                  // Method java/lang/Object.\"<init>\":()V\n";
     bytecode_file << "\t\t4: return\n\n";
     bytecode_file << "public static void main(java.lang.String[]);\n";
     bytecode_file << "\tCode:\n";
@@ -313,4 +345,9 @@ void print_code() {
     }
 
     bytecode_file << "\t\t" << program_counter_acc << ": return\n";
+}
+
+bool is_conditional_branch_instr(string instr) {
+    return instr == "if_icmple" || instr == "if_icmpge" || instr == "if_icmpne" 
+            || instr == "if_icmpeq" || instr == "if_icmplt" || instr == "if_icmpgt";
 }
