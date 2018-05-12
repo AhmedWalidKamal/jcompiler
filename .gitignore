@@ -1,12 +1,5 @@
-<<<<<<< HEAD
-# vscode
 .vscode/
 
-=======
-.vscode/
-
-
->>>>>>> 1c195d90af758845a59491e9c7a5af927a2266bb
 # Output files
 compiler.log
 token-file.txt

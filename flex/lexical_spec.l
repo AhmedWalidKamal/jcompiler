@@ -39,8 +39,8 @@ digits 		{digit}+
 letter		[a-zA-Z]
 id   		{letter}({letter}|{digit})*
 sign        [+-]
-int_num		{digits}
-float_num   (({digit}*\.{digit}+)|({digit}+\.{digit}*)){exp}?
+int_num		{sign}?{digits}
+float_num   {sign}?(({digit}*\.{digit}+)|({digit}+\.{digit}*)){exp}?
 exp         [eE]{sign}?{digit}+
 
 %%

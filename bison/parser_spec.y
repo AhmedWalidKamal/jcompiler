@@ -141,14 +141,6 @@ simple_expression: term
 					{
                     	$$ = $1;
                     }
-                    | sign term
-                    {
-                    	$$ = $2;
-                        // TODO: if sign is negative, multiply by -1
-                        // if ($1 == "-") {
-                        	
-                        // }
-                    }
                     | simple_expression TOK_ADDOP term
                     {
                     	// ASSUMING THAT SIMPLE_EXPRESSION AND TERM CAN'T BE BOOLEANS FOR NOW
@@ -161,7 +153,7 @@ simple_expression: term
                             	bytecode_file << "i" + instr_list[string($2)] << endl;
                             }
                         } else {
-                        	string err_msg = "ERROR: Arithmetic operation on two operands with different types!";
+                        	string err_msg = "Arithmetic operation on two operands with different types!";
                   			yyerror(err_msg.c_str());
                         }  
                     };
@@ -181,7 +173,7 @@ term: factor
                     bytecode_file << "i" + instr_list[string($2)] << endl;
                 }
             } else {
-            	string err_msg = "ERROR: Multiplication operation on two operands with different types!";
+            	string err_msg = "Multiplication operation on two operands with different types!";
                 yyerror(err_msg.c_str());
             }
         }
@@ -224,8 +216,6 @@ factor: TOK_ID
         {
           	$$ = $2;
         };
-
-sign: TOK_ADDOP;
 %%
 
 int main(int argc, char **argv) {
