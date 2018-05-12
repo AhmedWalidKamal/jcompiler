@@ -87,6 +87,8 @@ declaration: primitive_type TOK_ID ';'
         // Declaring a variable named "TOK_ID" with type primitive_type.
   		string name($2);
         add_to_symb_table(name, (type)$1);
+        bytecode_file << "ldc\t#" << constant_table["0"] << endl;
+        bytecode_file << "istore\t" << symbol_table[name].second << endl;
     };
 
 primitive_type: TOK_INT
@@ -113,9 +115,9 @@ assignment: TOK_ID TOK_ASSIGN expression ';'
   				if (symbol_table.find(id_name) != symbol_table.end()) {
                    if (symbol_table[id_name].first == $3) {
                      if ($3 == type::I_TYPE) {
-                       bytecode_file << "istore " << symbol_table[id_name].second << endl;
+                       bytecode_file << "istore\t" << symbol_table[id_name].second << endl;
                      } else if ($3 == type::F_TYPE) {
-                       bytecode_file << "fstore " << symbol_table[id_name].second << endl;
+                       bytecode_file << "fstore\t" << symbol_table[id_name].second << endl;
                      }
                    } else {
                      string err_msg = "Type mismatch!";
@@ -219,10 +221,13 @@ factor: TOK_ID
 %%
 
 int main(int argc, char **argv) {
+    
+    add_to_const_table (string("0"));
 
 	token_file.open("token-file.txt");
 	log_file.open("compiler.log");
     bytecode_file.open("bytecode.j");
+
 
 	log_file << std::left << std::setw (20) << "Match State" <<
         std::left << std::setw (40) << "Lexeme" << std::left << std::setw (30)
