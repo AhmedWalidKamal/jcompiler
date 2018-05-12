@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <vector>
 #include "bison/instr_set.h"
 using namespace std;
 
@@ -23,7 +24,7 @@ int program_counter = 0;
 typedef enum {I_TYPE, F_TYPE, B_TYPE} type;
 map<string, pair<type, int>> symbol_table;
 map<string, int> constant_table;
-
+vector<pair<string, int>> code_vec;
 // Function to handle parsing errors
 void yyerror(const char *s);
 
@@ -31,6 +32,7 @@ void yyerror(const char *s);
 void add_to_symb_table(string sym_name, type sym_type);
 void add_to_const_table(string const_name);
 bool same_type(int type_1, int type_2);
+void print_code();
 %}
 
 // Bison fundamentally works by asking flex to get the next token, which it
@@ -87,8 +89,8 @@ declaration: primitive_type TOK_ID ';'
         // Declaring a variable named "TOK_ID" with type primitive_type.
   		string name($2);
         add_to_symb_table(name, (type)$1);
-        bytecode_file << "ldc\t#" << constant_table["0"] << endl;
-        bytecode_file << "istore\t" << symbol_table[name].second << endl;
+        code_vec.push_back(make_pair("ldc\t#" + to_string(constant_table["0"]), 2));
+        code_vec.push_back(make_pair("istore\t" + to_string(symbol_table[name].second), 2));
     };
 
 primitive_type: TOK_INT
@@ -119,15 +121,15 @@ assignment: TOK_ID TOK_ASSIGN expression ';'
 				string id_name($1);
   				if (symbol_table.find(id_name) != symbol_table.end()) {
                    if (symbol_table[id_name].first == $3) {
-                     if ($3 == type::I_TYPE) {
-                       bytecode_file << "istore\t" << symbol_table[id_name].second << endl;
-                     } else if ($3 == type::F_TYPE) {
-                       bytecode_file << "fstore\t" << symbol_table[id_name].second << endl;
-                     }
-                   } else {
-                     string err_msg = "Type mismatch!";
-                     yyerror(err_msg.c_str());
-                   }
+                        if ($3 == type::I_TYPE) {
+                            code_vec.push_back(make_pair("istore\t" + to_string(symbol_table[id_name].second), 2));
+                        } else if ($3 == type::F_TYPE) {
+                            code_vec.push_back(make_pair("fstore\t" + to_string(symbol_table[id_name].second), 2));
+                        }
+                    } else {
+                        string err_msg = "Type mismatch!";
+                        yyerror(err_msg.c_str());
+                    }
                 } else {
                   string err_msg = "Variable: " + id_name + " has not been declared!";
                   yyerror(err_msg.c_str());
@@ -158,10 +160,10 @@ simple_expression: term
                         if (same_type($1, $3)) {
                         	if ($1 == type::F_TYPE) {
                             	$$ = type::F_TYPE;
-                            	bytecode_file << "f" + instr_list[string($2)] << endl;
+                                code_vec.push_back(make_pair("f" + instr_list[string($2)], 1));
                             } else if ($1 == type::I_TYPE) {
                             	$$ = type::I_TYPE;
-                            	bytecode_file << "i" + instr_list[string($2)] << endl;
+                                code_vec.push_back(make_pair("i" + instr_list[string($2)], 1));
                             }
                         } else {
                         	string err_msg = "Arithmetic operation on two operands with different types!";
@@ -178,10 +180,10 @@ term: factor
         	if (same_type($1, $3)) {
             	if ($1 == type::F_TYPE) {
                 	$$ = type::F_TYPE;
-                    bytecode_file << "f" + instr_list[string($2)] << endl;
+                    code_vec.push_back(make_pair("f" + instr_list[string($2)], 1));
                 } else if ($1 == type::I_TYPE) {
                     $$ = type::I_TYPE;
-                    bytecode_file << "i" + instr_list[string($2)] << endl;
+                    code_vec.push_back(make_pair("i" + instr_list[string($2)], 1));
                 }
             } else {
             	string err_msg = "Multiplication operation on two operands with different types!";
@@ -196,9 +198,9 @@ factor: TOK_ID
         	if (symbol_table.find(id_name) != symbol_table.end()) {
             	$$ = symbol_table[$1].first;
                 if (symbol_table[id_name].first == type::I_TYPE) {
-                    bytecode_file << "iload\t" << symbol_table[id_name].second << endl;
+                    code_vec.push_back(make_pair("iload\t" + to_string(symbol_table[id_name].second), 2));
                 } else if (symbol_table[id_name].first == type::F_TYPE) {
-                    bytecode_file << "fload\t" << symbol_table[id_name].second << endl;
+                    code_vec.push_back(make_pair("fload\t" + to_string(symbol_table[id_name].second), 2));
                 }
             } else {
                 string err_msg = "Variable: " + id_name + " has not been declared!";
@@ -212,7 +214,7 @@ factor: TOK_ID
         	if (constant_table.find(const_str) == constant_table.end()) {
             	add_to_const_table(const_str);
             }
-            bytecode_file << "ldc\t#" << constant_table[const_str] << endl;
+            code_vec.push_back(make_pair("ldc\t#" + to_string(constant_table[const_str]), 2));
         }
         | FLOAT 
         {
@@ -221,7 +223,7 @@ factor: TOK_ID
         	if (constant_table.find(const_str) == constant_table.end()) {
             	add_to_const_table(const_str);
             }
-            bytecode_file << "ldc\t#" << constant_table[const_str] << endl;
+            code_vec.push_back(make_pair("ldc\t#" + to_string(constant_table[const_str]), 2));
         }
         | '(' expression ')' 
         {
@@ -265,6 +267,8 @@ int main(int argc, char **argv) {
 	do {
 		yyparse();
 	} while (!feof(yyin));
+
+    print_code();
 }
 
 void yyerror(const char *s) {
@@ -289,4 +293,24 @@ void add_to_const_table(string const_str) {
 
 bool same_type(int type_1, int type_2) {
   return type_1 == type_2;
+}
+
+void print_code() {
+
+    int program_counter_acc = 0;
+
+    bytecode_file << "public Main();\n\tCode:\n";
+    bytecode_file << "\t\t0: aload_0\n";
+    bytecode_file << "\t\t1: invokespecial #1                  // Method java/lang/Object.\"<init>\":()V";
+    bytecode_file << "\t\t4: return\n\n";
+    bytecode_file << "public static void main(java.lang.String[]);\n";
+    bytecode_file << "\tCode:\n";
+
+
+    for (auto p : code_vec) {
+        bytecode_file << "\t\t" << program_counter_acc << ": " << p.first << "\n";
+        program_counter_acc += p.second;
+    }
+
+    bytecode_file << "\t\t" << program_counter_acc << ": return\n";
 }
