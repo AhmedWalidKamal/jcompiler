@@ -1,0 +1,15 @@
+int x;
+float y;
+int n;
+float m;
+if (x == n) {
+    if (y < m) {
+        y = m * 1.103E1;
+    } else {
+        m = y - (4.5 - 2.5) / 1.2;
+    }
+} else {
+    while (n > 40) {
+        n = n - (x - 2) / 30;
+    }
+}

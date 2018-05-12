@@ -1,5 +1,5 @@
-int x;
-x = 10;
+float x;
+x = 10.5;
 while (x > 1) {
-    x = x - 1;
+    x = x - 1.3;
 }
