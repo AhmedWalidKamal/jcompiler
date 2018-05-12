@@ -104,9 +104,14 @@ primitive_type: TOK_INT
 					$$ = type::B_TYPE;
                 };
 
-if: TOK_IF '(' expression ')' '{' statement '}' TOK_ELSE '{' statement '}';
+if: TOK_IF '(' boolean_expression
+                {
+                    // Here I've just wrote the relop bytecode
+                    
+                } 
+                ')' '{' statement '}' TOK_ELSE '{' statement '}';
 
-while: TOK_WHILE '(' expression ')' '{' statement '}';
+while: TOK_WHILE '(' boolean_expression ')' '{' statement '}';
 
 assignment: TOK_ID TOK_ASSIGN expression ';'
             {
@@ -132,12 +137,16 @@ assignment: TOK_ID TOK_ASSIGN expression ';'
 expression: simple_expression
 			{
             	$$ = $1;
-            }
-            | simple_expression TOK_RELOP simple_expression
-            {
-            	$$ = type::B_TYPE;
-                // TODO: write bytecode for relops
             };
+
+boolean_expression: simple_expression TOK_RELOP simple_expression
+                    {
+            	        $$ = type::B_TYPE;
+                        // TODO: write bytecode for relops
+                        // Here top 2 of the stack are the 2 values to operate on
+                
+                    };
+
 
 simple_expression: term
 					{

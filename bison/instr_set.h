@@ -9,12 +9,12 @@ std::map<std::string, std::string> instr_list = {
 		{"-", "sub"},
 		{"*", "mul"},
 		{"/", "div"},
-		{">",  "if_icmpgt"},
-		{"<",  "if_icmplt"},
-		{"==", "if_icmpeq"},
-		{"!=", "if_icmpne"},
-		{">=", "if_icmpge"},
-		{"<=", "if_icmple"}
+		{">",  "if_icmple"},
+		{"<",  "if_icmpge"},
+		{"==", "if_icmpne"},
+		{"!=", "if_icmpeq"},
+		{">=", "if_icmplt"},
+		{"<=", "if_icmpgt"}
 };
 
 #endif
