@@ -35,7 +35,7 @@ void yyerror(const char *s);
 void add_to_symb_table(string sym_name, type sym_type);
 void add_to_const_table(string const_name);
 bool same_type(int type_1, int type_2);
-bool is_conditional_branch_instr(string instuction);
+bool is_conditional_branch_instr(string instruction);
 void print_code();
 %}
 
